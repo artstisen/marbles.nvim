@@ -1,4 +1,4 @@
--- ReadMe - marbles.lua v1.0.2
+-- ReadMe - marbles.lua v1.0.3
 -- License: MIT
 -- Concept and programming by LBS with AI assistance. 
 -- Editing and testing done in Neovim.
@@ -36,6 +36,9 @@
 --                          decryption when opening .marblesfiles.
 --                          Or before encryption if a new password
 --                          is needed.
+-- :CreateDefaultMarbles - Create a default.marbles file.
+-- :LoadDefaultMarbles - Load the default.marbles file and decrypt it.
+-- :CreateMarblesFile - Create a .marbles file and prompt for a file name.
 -- :ClearEncryptionPassword – Clear password from memory.
 -- :ToggleReadonly – Toggle between writable and readonly modes.
 
@@ -153,9 +156,11 @@ local function try_auto_decrypt()
 
   if success then
     set_buffer_content(result)
-    vim.bo.readonly = true
+    vim.bo.readonly = false 
     vim.bo.modifiable = false
     vim.notify("File auto-decrypted using cached password.")
+    vim.bo.readonly = true 
+    vim.bo.modifiable = false 
   else
     vim.notify("Auto-decryption failed. Opening as is.", vim.log.levels.WARN)
   end
@@ -176,6 +181,50 @@ function M.setup()
     process_buffer("decrypt")
     vim.bo.readonly = true 
     vim.bo.modifiable = false
+  end, {})
+
+  -- Create default.marbles
+  vim.api.nvim_create_user_command("CreateDefaultMarbles", function()
+    local path = vim.fn.getcwd() .. "/default.marbles"
+    if vim.fn.filereadable(path) == 1 then
+      vim.notify("default.marbles already exists.", vim.log.levels.WARN)
+      return
+    end
+    vim.cmd("edit " .. path)
+    vim.cmd("write")
+    vim.notify("Created default.marbles.")
+  end, {})
+
+  -- Load and decrypt default.marbles
+vim.api.nvim_create_user_command("LoadDefaultMarbles", function()
+  local path = vim.fn.getcwd() .. "/default.marbles"
+  if vim.fn.filereadable(path) == 0 then
+    vim.notify("default.marbles does not exist in current directory.", vim.log.levels.ERROR)
+    return
+  end
+
+  -- If no password is cached, prompt before opening (so auto-decrypt can work)
+  if not password_cache then
+    local pw = prompt_password("Enter decryption password")
+    if not pw then return end
+    password_cache = pw
+  end
+
+  -- Open file — auto-decrypt will trigger if password is cached
+  vim.cmd("edit " .. path)
+end, {})
+
+  -- Create a .marbles file with prompt
+  vim.api.nvim_create_user_command("CreateMarblesFile", function()
+    local filename = vim.fn.input("Enter new .marbles filename (without extension): ")
+    if filename == "" then
+      print("Operation cancelled.")
+      return
+    end
+    local full_path = vim.fn.getcwd() .. "/" .. filename .. ".marbles"
+    vim.cmd("edit " .. full_path)
+    vim.cmd("write")
+    vim.notify("Created " .. filename .. ".marbles")
   end, {})
 
 vim.api.nvim_create_user_command("ToggleReadonly", function()

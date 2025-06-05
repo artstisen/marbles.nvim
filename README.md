@@ -1,7 +1,7 @@
 # 🔒 marbles.nvim
-## Easy file encryption for [Neovim](https://neovim.io/)
+**Easy file encryption for [Neovim](https://neovim.io/)**
 
-### Summary
+## Summary
 This Neovim plugin makes it easy to encrypt and decrypt the contents of files on-the-fly. The script limits itself to a specific file type so it does not interfere with your normal workflow. The script can automatically decrypt encrypted files if a key is set beforehand. Files that are opened and decrypted are set as readonly so you can pick the information you need. With the toggle command you can unlock the file and change/add content before encrypting and saving the file again. Shada and swap files are disabled for that file type so you don't inadvertently store sensitive data in nvims temp files. When creating an encryption key, you are asked twice to ensure that the key is entered correctly. If no encryption key is specified, you can manually decrypt the file (see Commands), where the script will ask for your encryption key.
 
 ### Background
@@ -19,9 +19,11 @@ However, since I now do all my work in Neovim, I would like to have the option t
 * **Security:** Shada and swapfiles are disabled for .marbles files but not for other file types. This will prevent sensitive information from being stored in temporary files that are not encrypted.
 * **Please note:** .marbles files are rendered as markdown files. Just remove this option `vim.bo.filetype = "markdown"` if you want plain text.
 
-### Installation
+### Requirements and installation
+* Written for Neovim v0.11
+* Requires [openssl](https://openssl-library.org/) to encrypt/decrypt file contents.
 1. Place the marbles.lua file in your lua folder and instantiate the plugin from your init file with `require("marbles").setup()`
-2. This plugin uses openssl: [https://openssl-library.org/](https://openssl-library.org/) Install openssl and change the path in the script `run_openssl` method to reference the openssl executable on your system.
+2. This plugin uses openssl: [https://github.com/openssl/openssl/wiki/Binaries/](https://github.com/openssl/openssl/wiki/Binaries) Install openssl and change the path in the script `run_openssl` method to reference the openssl executable on your system.
 
 ### Commands
 * `:EncryptFile` – Encrypt current .marblesfile using password. Will use cached password if available and if not prompt the user to enter a new password twice. Remember to save your file afterwards.

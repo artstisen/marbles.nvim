@@ -31,3 +31,6 @@ However, since I now do all my work in Neovim, I would like to have the option t
 * `:ToggleReadonly` – Toggle between writable and readonly modes.
 
 Change the commands as you like and bind them to the keys you want.
+
+#### Disclaimer
+Please note: If you forget your encryption key, it will not be possible to recover your encrypted data. I cannot be held liable for any data lost as a result of using this plugin. See software license for further information.

@@ -7,7 +7,7 @@ This Neovim plugin makes it easy to encrypt and decrypt the contents of files on
 ## Background
 Vim has built-in encryption, but Neovim does not. This was omitted as a deliberate choice. The implementation in Vim is very basic and I wanted to stay in Neovim as well.
 
-I have previously created a couple of apps for taking notes with encryption:
+I've previously made a couple of apps for taking notes with encryption, both terminal (cross-platform) and OS-specific:
 * [https://github.com/artstisen/marbles](https://github.com/artstisen/marbles) 
 * [https://github.com/artstisen/AHOY](https://github.com/artstisen/AHOY) 
   

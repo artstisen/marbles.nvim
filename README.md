@@ -20,7 +20,7 @@ However, since I now do all my work in Neovim, I would like to have the option t
 * **Please note:** .marbles files are rendered as markdown files. Just remove this option `vim.bo.filetype = "markdown"` if you want plain text.
 
 ### Requirements and installation
-* Written for Neovim v0.11
+* Written and tested for Neovim v0.11, but should work on older versions from v0.8 and up.
 * Requires [openssl](https://openssl-library.org/) to encrypt/decrypt file contents.
 1. Place the marbles.lua file in your lua folder and instantiate the plugin from your init file with `require("marbles").setup()`
 2. This plugin uses openssl: [https://github.com/openssl/openssl/wiki/Binaries/](https://github.com/openssl/openssl/wiki/Binaries) Install openssl and change the path in the script `run_openssl` method to reference the openssl executable on your system.

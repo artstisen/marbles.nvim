@@ -1,4 +1,4 @@
-# marbles.nvim
+# 🔒 marbles.nvim
 **Easy file encryption for Neovim**
 
 ## Summary

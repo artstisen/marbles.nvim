@@ -15,7 +15,7 @@ However, since I now do all my work in Neovim, I would like to have the option t
 
 ### Specifications
 * **Encryption:** AES-256 with BASE64 encoding.
-*  **File type:** `.marbles` - This plugin will only target files with a _.marbles_ extension. This was done on purpose to separate normal workflow in nvim from files containing sensitive information. Feel free to change file extension or modify the script in any way you like.
+* **File type:** `.marbles` - This plugin will only target files with a _.marbles_ extension. This was done on purpose to separate normal workflow in nvim from files containing sensitive information. Feel free to change file extension or modify the script in any way you like.
 * **Security:** Shada and swapfiles are disabled for .marbles files but not for other file types. This will prevent sensitive information from being stored in temporary files that are not encrypted.
 * **Please note:** .marbles files are rendered as markdown files. Just remove this option `vim.bo.filetype = "markdown"` if you want plain text.
 

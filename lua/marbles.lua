@@ -1,4 +1,4 @@
--- ReadMe - marbles.lua v1.0.1
+-- ReadMe - marbles.lua v1.0.2
 -- License: MIT
 -- Concept and programming by LBS with AI assistance. 
 -- Editing and testing done in Neovim.
@@ -179,7 +179,11 @@ function M.setup()
   end, {})
 
 vim.api.nvim_create_user_command("ToggleReadonly", function()
-  if vim.bo.readonly or not vim.bo.modifiable then
+  if not is_marbles_file() then
+    print("Only .marbles files are supported.")
+    return
+  end
+    if vim.bo.readonly or not vim.bo.modifiable then
     vim.bo.readonly = false
     vim.bo.modifiable = true
     vim.notify("File is now writable.")

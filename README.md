@@ -21,7 +21,7 @@ However, since I now do all my work in Neovim, I would like to have the option t
 
 ## Installation
 1. Place the marbles.lua file in your lua folder and instantiate the plugin from your init file with `require("marbles").setup()`
-2. This plugin uses openssl: [https://openssl-library.org/](https://openssl-library.org/) Install openssl and change the path in this code to reference the openssl executable on your system.
+2. This plugin uses openssl: [https://openssl-library.org/](https://openssl-library.org/) Install openssl and change the path in the script `run_openssl` method to reference the openssl executable on your system.
 
 ## Commands
 * `:EncryptFile` – Encrypt current .marblesfile using password. Will use cached password if available and if not prompt the user to enter a new password twice. Remember to save your file afterwards.

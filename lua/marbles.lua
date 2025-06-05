@@ -1,4 +1,4 @@
--- ReadMe - marbles.lua v1.0.0
+-- ReadMe - marbles.lua v1.0.1
 -- License: MIT
 -- Concept and programming by LBS with AI assistance. 
 -- Editing and testing done in Neovim.
@@ -137,6 +137,7 @@ local function process_buffer(mode)
     vim.bo.modifiable = false
     vim.notify("File " .. mode .. "ed successfully.")
   else
+      password_cache = nil -- Remove cached key
     vim.notify(mode .. "ion failed:\n" .. result, vim.log.levels.ERROR)
   end
 end

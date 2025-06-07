@@ -1,6 +1,6 @@
 # 🔒 marbles.nvim
 ## Easy file encryption for [Neovim](https://neovim.io/)
-Marbles can be used both with commands or with the built-in menu to encrypt and decrypt the contents of your files.
+**marbles.nvim** can be used both with commands or with the built-in menu to encrypt and decrypt the contents of your files.
 
 ![marbles-nvim1](https://github.com/artstisen/marbles.nvim/blob/main/marbles-nvim1.gif)
 

@@ -1,4 +1,4 @@
--- ReadMe - marbles.lua v1.0.3
+-- ReadMe - marbles.lua v1.0.4
 -- License: MIT
 -- Concept and programming by LBS with AI assistance. 
 -- Editing and testing done in Neovim.
@@ -39,6 +39,7 @@
 -- :CreateDefaultMarbles - Create a default.marbles file.
 -- :LoadDefaultMarbles - Load the default.marbles file and decrypt it.
 -- :CreateMarblesFile - Create a .marbles file and prompt for a file name.
+-- :EncryptAndSaveFile - Encrypt and write the file.
 -- :ClearEncryptionPassword – Clear password from memory.
 -- :ToggleReadonly – Toggle between writable and readonly modes.
 
@@ -86,6 +87,8 @@ end
 
 -- Set buffer content
 local function set_buffer_content(str)
+    vim.bo.readonly = false 
+    vim.bo.modifiable = true 
   local lines = vim.split(str, "\n", { plain = true })
   vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
 end
@@ -140,7 +143,7 @@ local function process_buffer(mode)
     vim.bo.modifiable = false
     vim.notify("File " .. mode .. "ed successfully.")
   else
-      password_cache = nil -- Remove cached key
+    password_cache = nil -- Remove cached key
     vim.notify(mode .. "ion failed:\n" .. result, vim.log.levels.ERROR)
   end
 end
@@ -156,14 +159,19 @@ local function try_auto_decrypt()
 
   if success then
     set_buffer_content(result)
-    vim.bo.readonly = false 
+    vim.bo.readonly = false
     vim.bo.modifiable = false
     vim.notify("File auto-decrypted using cached password.")
-    vim.bo.readonly = true 
-    vim.bo.modifiable = false 
+    vim.bo.readonly = true
+    vim.bo.modifiable = false
   else
     vim.notify("Auto-decryption failed. Opening as is.", vim.log.levels.WARN)
   end
+end
+
+-- Exported helper
+function M.is_password_cached()
+  return password_cache ~= nil
 end
 
 function M.setup()
@@ -171,19 +179,30 @@ function M.setup()
     vim.bo.readonly = false
     vim.bo.modifiable = true
     process_buffer("encrypt")
-    vim.bo.readonly = false 
+    vim.bo.readonly = false
     vim.bo.modifiable = false
   end, {})
 
   vim.api.nvim_create_user_command("DecryptFile", function()
-    vim.bo.readonly = true 
-    vim.bo.modifiable = true 
+    vim.bo.readonly = true
+    vim.bo.modifiable = true
     process_buffer("decrypt")
-    vim.bo.readonly = true 
+    vim.bo.readonly = true
     vim.bo.modifiable = false
   end, {})
 
-  -- Create default.marbles
+  vim.api.nvim_create_user_command("EncryptAndSaveFile", function()
+    vim.bo.readonly = false
+    vim.bo.modifiable = true
+    process_buffer("encrypt")
+    vim.bo.readonly = false
+    vim.bo.modifiable = true
+    vim.cmd("write")
+    vim.notify("File encrypted and saved.")
+    vim.bo.readonly = false
+    vim.bo.modifiable = false
+  end, {})
+
   vim.api.nvim_create_user_command("CreateDefaultMarbles", function()
     local path = vim.fn.getcwd() .. "/default.marbles"
     if vim.fn.filereadable(path) == 1 then
@@ -195,26 +214,20 @@ function M.setup()
     vim.notify("Created default.marbles.")
   end, {})
 
-  -- Load and decrypt default.marbles
-vim.api.nvim_create_user_command("LoadDefaultMarbles", function()
-  local path = vim.fn.getcwd() .. "/default.marbles"
-  if vim.fn.filereadable(path) == 0 then
-    vim.notify("default.marbles does not exist in current directory.", vim.log.levels.ERROR)
-    return
-  end
+  vim.api.nvim_create_user_command("LoadDefaultMarbles", function()
+    local path = vim.fn.getcwd() .. "/default.marbles"
+    if vim.fn.filereadable(path) == 0 then
+      vim.notify("default.marbles does not exist in current directory.", vim.log.levels.ERROR)
+      return
+    end
+    if not password_cache then
+      local pw = prompt_password("Enter decryption password")
+      if not pw then return end
+      password_cache = pw
+    end
+    vim.cmd("edit " .. path)
+  end, {})
 
-  -- If no password is cached, prompt before opening (so auto-decrypt can work)
-  if not password_cache then
-    local pw = prompt_password("Enter decryption password")
-    if not pw then return end
-    password_cache = pw
-  end
-
-  -- Open file — auto-decrypt will trigger if password is cached
-  vim.cmd("edit " .. path)
-end, {})
-
-  -- Create a .marbles file with prompt
   vim.api.nvim_create_user_command("CreateMarblesFile", function()
     local filename = vim.fn.input("Enter new .marbles filename (without extension): ")
     if filename == "" then
@@ -227,21 +240,21 @@ end, {})
     vim.notify("Created " .. filename .. ".marbles")
   end, {})
 
-vim.api.nvim_create_user_command("ToggleReadonly", function()
-  if not is_marbles_file() then
-    print("Only .marbles files are supported.")
-    return
-  end
+  vim.api.nvim_create_user_command("ToggleReadonly", function()
+    if not is_marbles_file() then
+      print("Only .marbles files are supported.")
+      return
+    end
     if vim.bo.readonly or not vim.bo.modifiable then
-    vim.bo.readonly = false
-    vim.bo.modifiable = true
-    vim.notify("File is now writable.")
-  else
-    vim.bo.readonly = true
-    vim.bo.modifiable = false
-    vim.notify("File is now readonly.")
-  end
-end, {})
+      vim.bo.readonly = false
+      vim.bo.modifiable = true
+      vim.notify("File is now writable.")
+    else
+      vim.bo.readonly = true
+      vim.bo.modifiable = false
+      vim.notify("File is now readonly.")
+    end
+  end, {})
 
   vim.api.nvim_create_user_command("ClearEncryptionPassword", function()
     password_cache = nil
@@ -269,6 +282,34 @@ end, {})
       vim.bo.filetype = "markdown"
     end,
   })
+
+  -- Menu integration
+  local marbles_menu = require("marbles_menu")
+
+  local marbles_menu_items = {
+    { label = "Set key ....... :SetEncryptionPassword", action = function() vim.cmd("SetEncryptionPassword") end },
+    { label = "Clear key ..... :ClearEncryptionPassword", action = function() vim.cmd("ClearEncryptionPassword") end },
+    { label = "Decrypt ....... :DecryptFile", action = function() vim.cmd("DecryptFile") end },
+    { label = "Encrypt ....... :EncryptFile", action = function() vim.cmd("EncryptFile") end },
+    { label = "Encrypt+Save .. :EncryptAndSaveFile", action = function() vim.cmd("EncryptAndSaveFile") end },
+    { label = "Toggle RO ..... :ToggleReadonly", action = function() vim.cmd("ToggleReadonly") end },
+    { label = "Load default .. :LoadDefaultMarbles", action = function() vim.cmd("LoadDefaultMarbles") end },
+    { label = "Create default  :CreateDefaultMarbles", action = function() vim.cmd("CreateDefaultMarbles") end },
+    { label = "Create new .... :CreateMarblesFile", action = function() vim.cmd("CreateMarblesFile") end },
+    { label = "Quit .......... :q!", action = function() vim.cmd("q!") end },
+  }
+
+  function M.open_marbles_menu()
+    marbles_menu.open_menu({
+      title = "# Marbles (j/k/l/Enter/Esc)",
+      menu_items = marbles_menu_items,
+      footer = function()
+        return M.is_password_cached() and "Encryption password cached." or "No encryption password cached."
+      end,
+    })
+  end
+
+  vim.api.nvim_create_user_command("MarblesMenu", function() M.open_marbles_menu() end, {})
 end
 
 return M

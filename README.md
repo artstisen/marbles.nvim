@@ -1,8 +1,16 @@
 # 🔒 marbles.nvim
-**Easy file encryption for [Neovim](https://neovim.io/)**
+## Easy file encryption for [Neovim](https://neovim.io/)
+Marbles can be used both with commands or with the built-in menu to encrypt and decrypt the contents of your files.
+
+![marbles-nvim1](https://github.com/user-attachments/assets/bd54c0cf-685c-4528-a548-5d3bf14e76d9)
 
 ## Summary
 This Neovim plugin makes it easy to encrypt and decrypt the contents of files on-the-fly. The script limits itself to a specific file type so it does not interfere with your normal workflow. The script can automatically decrypt encrypted files if a key is set beforehand. Files that are opened and decrypted are set as readonly so you can pick the information you need. With the toggle command you can unlock the file and change/add content before encrypting and saving the file again. Shada and swap files are disabled for that file type so you don't inadvertently store sensitive data in nvims temp files. When creating an encryption key, you are asked twice to ensure that the key is entered correctly. If no encryption key is specified, you can manually decrypt the file (see Commands), where the script will ask for your encryption key.
+
+**Loading an encrypted file without having cached a decryption key requires manual decryption with a key. Loading a file where the key is already set will be automatically decrypted.**
+
+![marbles-nvim2](https://github.com/user-attachments/assets/a105415c-3b9b-494f-b983-85d1f59c87f1)
+
 
 ### Background
 [Vim](https://www.vim.org/) has built-in encryption, but Neovim does not. This was omitted as a deliberate choice. The implementation in Vim is very basic and I wanted to stay in Neovim as well.

@@ -35,6 +35,7 @@ However, since I now do all my work in Neovim, I would like to have the option t
 ### Commands
 * `:EncryptFile` - Encrypt current .marblesfile using password. Will use cached password if available and if not prompt the user to enter a new password twice. Remember to save your file afterwards.
 * `:DecryptFile` - Decrypt current .marblesfile using password. Will use cached password if available and auto-decrypt files when opening them. Auto decrypted files will open in readonly mode and modifieable set to false. Use ToggleReadonly.
+* `:EncryptAndSaveFile` - Encrypt and write the file.
 * `:CreateDefaultMarbles` - Create a default.marbles file.
 * `:LoadDefaultMarbles` - Load the default.marbles file and decrypt it.
 * `:CreateMarblesFile` - Create a .marbles file and prompt for a file name.

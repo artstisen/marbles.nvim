@@ -1,4 +1,4 @@
--- ReadMe - marbles_menu.lua v1.0.0
+-- ReadMe - marbles_menu.lua v1.0.1
 -- License: MIT
 -- Concept and programming by LBS with AI assistance. 
 -- Editing and testing done in Neovim.
@@ -7,7 +7,6 @@
 -- marbles_menu.lua
 local M = {}
 
--- Utility: Get highlight color from colorscheme
 local function get_hl_color(group, attr)
   local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = group })
   if ok and hl and hl[attr] then
@@ -22,56 +21,71 @@ function M.open_menu(opts)
   local footer_fn = opts.footer
 
   local buf = vim.api.nvim_create_buf(false, true)
-  local cursor = 2 -- line 1 = title, so first item starts at line 2
+  vim.api.nvim_buf_set_option(buf, 'filetype', 'markdown')
+
+  local cursor = 1
+  local scroll_offset = 0
+  local max_display = 10
 
   local width = 45
-  local height = #menu_items + 3 -- title + items + footer
+  local base_height = #menu_items + 1  -- 1 for title + visible items
+
+  -- === Dynamically include footer height ===
+  local footer_text = ""
+  if footer_fn then
+    footer_text = type(footer_fn) == "function" and footer_fn() or tostring(footer_fn)
+  end
+  local has_footer = footer_text and footer_text:match("%S")
+  local height = base_height + (has_footer and 2 or 0)
+
   local row = (vim.o.lines - height) / 2
   local col = (vim.o.columns - width) / 2
 
-  -- Fetch colors or fallback
   local float_bg = get_hl_color("Normal", "bg") or "#1e1e1e"
   local float_fg = get_hl_color("Normal", "fg") or "#ffffff"
   local border_fg = get_hl_color("Normal", "fg") or "#808080"
 
-  -- Set highlight groups
   vim.api.nvim_set_hl(0, 'NormalFloat', { bg = float_bg, fg = float_fg })
   vim.api.nvim_set_hl(0, 'FloatBorder', { fg = border_fg, bg = float_bg })
   vim.api.nvim_set_hl(0, 'UtilMenuSelected', { bg = border_fg, fg = float_bg, bold = true })
 
-  -- Helper to build lines for buffer
   local function build_lines()
     local lines = { title }
-    for i, item in ipairs(menu_items) do
-      local line = (i + 1 == cursor) and "> " .. item.label or "  " .. item.label
-      table.insert(lines, line)
+
+    local total = #menu_items
+    local view_start = scroll_offset + 1
+    local view_end = math.min(total, scroll_offset + max_display)
+
+    for i = view_start, view_end do
+      local prefix = (i == cursor) and "> " or "  "
+      table.insert(lines, prefix .. menu_items[i].label)
     end
-    -- Optional footer
-    if footer_fn then
-      local footer_line = type(footer_fn) == "function" and footer_fn() or tostring(footer_fn)
+
+    if has_footer then
       table.insert(lines, "")
-      table.insert(lines, footer_line)
+      table.insert(lines, footer_text)
     end
+
     return lines
   end
 
-  -- Render menu content
   local function refresh()
-    vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-    vim.api.nvim_buf_set_option(buf, 'filetype', 'markdown')
     local lines = build_lines()
+    vim.api.nvim_buf_set_option(buf, 'modifiable', true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.api.nvim_buf_clear_namespace(buf, -1, 0, -1)
 
-    -- Only highlight valid menu item line:
-    if cursor >= 2 and cursor <= (#menu_items + 1) then
-      vim.api.nvim_buf_add_highlight(buf, -1, 'UtilMenuSelected', cursor - 1, 0, -1)
+    local total = #menu_items
+    local view_start = scroll_offset + 1
+    local view_end = math.min(total, scroll_offset + max_display)
+
+    if cursor >= view_start and cursor <= view_end then
+      local hl_line = (cursor - view_start) + 2
+      vim.api.nvim_buf_add_highlight(buf, -1, 'UtilMenuSelected', hl_line - 1, 0, -1)
     end
 
     vim.api.nvim_buf_set_option(buf, 'modifiable', false)
   end
-
-  refresh()
 
   vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
 
@@ -94,46 +108,56 @@ function M.open_menu(opts)
     vim.api.nvim_win_close(win, true)
   end
 
-  -- Wrap-around navigation
   vim.keymap.set('n', 'j', function()
-    if cursor >= (#menu_items + 1) then
-      cursor = 2
-    else
-      cursor = cursor + 1
+    local total = #menu_items
+    if total == 0 then return end
+
+    cursor = cursor + 1
+    if cursor > total then
+      cursor = 1
+      scroll_offset = 0
+    elseif cursor > scroll_offset + max_display then
+      scroll_offset = scroll_offset + 1
     end
+
     refresh()
   end, opts_keymap)
 
   vim.keymap.set('n', 'k', function()
-    if cursor <= 2 then
-      cursor = (#menu_items + 1)
-    else
-      cursor = cursor - 1
+    local total = #menu_items
+    if total == 0 then return end
+
+    cursor = cursor - 1
+    if cursor < 1 then
+      cursor = total
+      scroll_offset = math.max(0, total - max_display)
+    elseif cursor <= scroll_offset then
+      scroll_offset = scroll_offset - 1
     end
+
     refresh()
   end, opts_keymap)
 
   vim.keymap.set('n', 'l', function()
-    local index = cursor - 1
-    if index >= 1 and index <= #menu_items then
+    if cursor >= 1 and cursor <= #menu_items then
       close()
-      menu_items[index].action()
+      menu_items[cursor].action()
     end
   end, opts_keymap)
 
   vim.keymap.set('n', '<CR>', function()
-    local index = cursor - 1
-    if index >= 1 and index <= #menu_items then
+    if cursor >= 1 and cursor <= #menu_items then
       close()
-      menu_items[index].action()
+      menu_items[cursor].action()
     end
   end, opts_keymap)
 
   vim.keymap.set('n', 'q', close, opts_keymap)
   vim.keymap.set('n', '<Esc>', close, opts_keymap)
+
+  refresh()
 end
 
--- Optional default command if you want:
 vim.api.nvim_create_user_command("Util", function()
   M.open_menu({
     title = "# Util Menu",
@@ -146,3 +170,4 @@ vim.api.nvim_create_user_command("Util", function()
 end, {})
 
 return M
+
